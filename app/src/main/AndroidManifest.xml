@@ -484,11 +484,6 @@
             </intent-filter>
         </receiver>
 
-        <receiver
-                android:name="au.com.shiftyjelly.pocketcasts.views.component.CustomTabsBroadcastReceiver"
-                android:enabled="true">
-        </receiver>
-
         <!-- Google play services -->
         <meta-data
                 android:name="com.google.android.gms.version"
