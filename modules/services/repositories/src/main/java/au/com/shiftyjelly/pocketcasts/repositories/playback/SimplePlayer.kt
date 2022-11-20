@@ -9,6 +9,7 @@ import android.widget.Toast
 import au.com.shiftyjelly.pocketcasts.models.entity.Podcast
 import au.com.shiftyjelly.pocketcasts.models.to.PlaybackEffects
 import au.com.shiftyjelly.pocketcasts.preferences.Settings
+import au.com.shiftyjelly.pocketcasts.repositories.playback.Player as PocketCastPlayer
 import au.com.shiftyjelly.pocketcasts.repositories.user.StatsManager
 import au.com.shiftyjelly.pocketcasts.utils.log.LogBuffer
 import com.google.android.exoplayer2.C
@@ -33,7 +34,12 @@ import timber.log.Timber
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-class SimplePlayer(val settings: Settings, val statsManager: StatsManager, val context: Context, override val onPlayerEvent: (au.com.shiftyjelly.pocketcasts.repositories.playback.Player, PlayerEvent) -> Unit) : LocalPlayer(onPlayerEvent) {
+class SimplePlayer(
+    val settings: Settings,
+    val statsManager: StatsManager,
+    val context: Context,
+    override val onPlayerEvent: (PocketCastPlayer, PlayerEvent) -> Unit
+) : LocalPlayer(onPlayerEvent) {
 
     companion object {
         private val BUFFER_TIME_MIN_MILLIS = TimeUnit.MINUTES.toMillis(15).toInt()
@@ -126,7 +132,11 @@ class SimplePlayer(val settings: Settings, val statsManager: StatsManager, val c
 
     override fun handleSeekToTimeMs(positionMs: Int) {
         if (player?.isCurrentMediaItemSeekable == false && player?.isPlaying == true) {
-            Toast.makeText(context, "Unable to seek. File headers appear to be invalid.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                "Unable to seek. File headers appear to be invalid.",
+                Toast.LENGTH_SHORT
+            ).show()
         } else {
             player?.seekTo(positionMs.toLong())
             super.onSeekComplete(positionMs)
@@ -169,9 +179,12 @@ class SimplePlayer(val settings: Settings, val statsManager: StatsManager, val c
     private fun prepare() {
         val trackSelector = DefaultTrackSelector(context)
 
-        val minBufferMillis = if (isStreaming) BUFFER_TIME_MIN_MILLIS else DefaultLoadControl.DEFAULT_MIN_BUFFER_MS
-        val maxBufferMillis = if (isStreaming) BUFFER_TIME_MAX_MILLIS else DefaultLoadControl.DEFAULT_MAX_BUFFER_MS
-        val backBufferMillis = if (isStreaming) BACK_BUFFER_TIME_MILLIS else DefaultLoadControl.DEFAULT_BACK_BUFFER_DURATION_MS
+        val minBufferMillis =
+            if (isStreaming) BUFFER_TIME_MIN_MILLIS else DefaultLoadControl.DEFAULT_MIN_BUFFER_MS
+        val maxBufferMillis =
+            if (isStreaming) BUFFER_TIME_MAX_MILLIS else DefaultLoadControl.DEFAULT_MAX_BUFFER_MS
+        val backBufferMillis =
+            if (isStreaming) BACK_BUFFER_TIME_MILLIS else DefaultLoadControl.DEFAULT_BACK_BUFFER_DURATION_MS
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(
                 minBufferMillis,
@@ -179,7 +192,10 @@ class SimplePlayer(val settings: Settings, val statsManager: StatsManager, val c
                 DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
                 DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
             )
-            .setBackBuffer(backBufferMillis, DefaultLoadControl.DEFAULT_RETAIN_BACK_BUFFER_FROM_KEYFRAME)
+            .setBackBuffer(
+                backBufferMillis,
+                DefaultLoadControl.DEFAULT_RETAIN_BACK_BUFFER_FROM_KEYFRAME
+            )
             .build()
 
         val renderer = createRenderersFactory()
@@ -199,7 +215,10 @@ class SimplePlayer(val settings: Settings, val statsManager: StatsManager, val c
         setPlayerEffects()
         player.addListener(object : Player.Listener {
             @Deprecated("Deprecated. Use onTracksInfoChanged(TracksInfo) instead.")
-            override fun onTracksChanged(trackGroups: TrackGroupArray, trackSelections: TrackSelectionArray) {
+            override fun onTracksChanged(
+                trackGroups: TrackGroupArray,
+                trackSelections: TrackSelectionArray
+            ) {
                 val episodeMetadata = EpisodeFileMetadata(filenamePrefix = episodeUuid)
                 episodeMetadata.read(trackSelections, settings, context)
                 onMetadataAvailable(episodeMetadata)
@@ -231,7 +250,8 @@ class SimplePlayer(val settings: Settings, val statsManager: StatsManager, val c
             .setUserAgent("Pocket Casts")
             .setAllowCrossProtocolRedirects(true)
         val dataSourceFactory = DefaultDataSource.Factory(context, httpDataSourceFactory)
-        val extractorsFactory = DefaultExtractorsFactory().setMp3ExtractorFlags(Mp3Extractor.FLAG_ENABLE_CONSTANT_BITRATE_SEEKING)
+        val extractorsFactory =
+            DefaultExtractorsFactory().setMp3ExtractorFlags(Mp3Extractor.FLAG_ENABLE_CONSTANT_BITRATE_SEEKING)
         val location = episodeLocation
         if (location == null) {
             onError(PlayerEvent.PlayerError("Episode has no source"))
@@ -242,6 +262,7 @@ class SimplePlayer(val settings: Settings, val statsManager: StatsManager, val c
             is EpisodeLocation.Stream -> {
                 Uri.parse(location.uri)
             }
+
             is EpisodeLocation.Downloaded -> {
                 val filePath = location.filePath
                 if (filePath != null) {
@@ -269,7 +290,13 @@ class SimplePlayer(val settings: Settings, val statsManager: StatsManager, val c
                 videoHeight = videoSize.height
 
                 videoChangedListener?.let {
-                    Handler(Looper.getMainLooper()).post { it.videoSizeChanged(videoSize.width, videoSize.height, videoSize.pixelWidthHeightRatio) }
+                    Handler(Looper.getMainLooper()).post {
+                        it.videoSizeChanged(
+                            videoSize.width,
+                            videoSize.height,
+                            videoSize.pixelWidthHeightRatio
+                        )
+                    }
                 }
             }
         })
@@ -278,9 +305,17 @@ class SimplePlayer(val settings: Settings, val statsManager: StatsManager, val c
     private fun createRenderersFactory(): ShiftyRenderersFactory {
         val playbackEffects: PlaybackEffects? = this.playbackEffects
         return if (playbackEffects == null) {
-            ShiftyRenderersFactory(context = context, statsManager = statsManager, boostVolume = false)
+            ShiftyRenderersFactory(
+                context = context,
+                statsManager = statsManager,
+                boostVolume = false
+            )
         } else {
-            ShiftyRenderersFactory(context = context, statsManager = statsManager, boostVolume = playbackEffects.isVolumeBoosted)
+            ShiftyRenderersFactory(
+                context = context,
+                statsManager = statsManager,
+                boostVolume = playbackEffects.isVolumeBoosted
+            )
         }
     }
 
