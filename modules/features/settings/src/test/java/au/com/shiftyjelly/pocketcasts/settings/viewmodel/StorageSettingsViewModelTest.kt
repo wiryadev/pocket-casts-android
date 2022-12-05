@@ -102,7 +102,7 @@ class StorageSettingsViewModelTest {
         val folderLocation = FolderLocation(Settings.STORAGE_ON_CUSTOM_FOLDER, CUSTOM_FOLDER_LABEL)
         startViewModelAndResumeFragment(folderLocations = listOf(folderLocation), sdkVersion = 28)
         val file = File(folderLocation.filePath)
-        whenever(fileStorage.baseStorageDirectory).thenReturn(file)
+        whenever(fileStorage.getBaseStorageDirectory()).thenReturn(file)
         whenever(settings.usingCustomFolderStorage()).thenReturn(true)
 
         viewModel.state.value.storageChoiceState.onStateChange(folderLocation.filePath)
@@ -176,7 +176,7 @@ class StorageSettingsViewModelTest {
             permissionGranted = permissionGranted
         )
         val oldFile = File(folderLocation.filePath)
-        whenever(fileStorage.baseStorageDirectory).thenReturn(oldFile)
+        whenever(fileStorage.getBaseStorageDirectory()).thenReturn(oldFile)
         whenever(settings.usingCustomFolderStorage()).thenReturn(true)
         createNewTemporaryCustomFolder()
         val collectJob = launch(UnconfinedTestDispatcher()) {

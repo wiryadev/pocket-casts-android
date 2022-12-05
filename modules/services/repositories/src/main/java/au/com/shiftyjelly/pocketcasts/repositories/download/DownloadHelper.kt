@@ -57,7 +57,7 @@ object DownloadHelper {
 
     @Throws(StorageException::class)
     fun tempPathForEpisode(episode: Playable, fileStorage: FileStorage): String {
-        val file = fileStorage.getTempPodcastEpsisodeFile(episode)
+        val file = fileStorage.getTempPodcastEpisodeFile(episode)
         return file.absolutePath
     }
 }

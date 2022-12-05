@@ -803,8 +803,8 @@ class EpisodeManagerImpl @Inject constructor(
     override fun deleteDownloadedEpisodeFiles() {
         // remove all the files off the disk, ignore any errors and continue
         try {
-            fileStorage.removeDirectoryFiles(fileStorage.podcastDirectory)
-            fileStorage.removeDirectoryFiles(fileStorage.tempPodcastDirectory)
+            fileStorage.removeDirectoryFiles(fileStorage.getPodcastDirectory())
+            fileStorage.removeDirectoryFiles(fileStorage.getTempPodcastDirectory())
         } catch (e: Exception) {
             Timber.e(e)
         }
